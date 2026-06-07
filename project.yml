@@ -29,9 +29,13 @@ targets:
         DEVELOPMENT_TEAM: SGT92DDF82
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_IDENTITY: "Apple Distribution"
-        INFOPLIST_KEY_CFBundleIcons_CFBundlePrimaryIcon: "App Icon & Top Shelf Image"
-        INFOPLIST_KEY_TVTopShelfImage_TVTopShelfPrimaryImageWide: "App Icon & Top Shelf Image"
-        INFOPLIST_KEY_CFBundleDisplayName: "StreamVault"
-        INFOPLIST_KEY_UIUserInterfaceStyle: "Dark"
-        INFOPLIST_KEY_NSAppTransportSecurity:
+    info:
+      properties:
+        CFBundleDisplayName: "StreamVault"
+        UIUserInterfaceStyle: "Dark"
+        NSAppTransportSecurity:
           NSAllowsArbitraryLoads: true
+        CFBundleIcons:
+          CFBundlePrimaryIcon: "App Icon & Top Shelf Image"
+        TVTopShelfImage:
+          TVTopShelfPrimaryImageWide: "App Icon & Top Shelf Image"
