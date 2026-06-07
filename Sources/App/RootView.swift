@@ -3,22 +3,33 @@ import SwiftUI
 struct RootView: View {
     @EnvironmentObject var playlist: PlaylistStore
     @EnvironmentObject var theme: ThemeStore
+    @State private var showSplash = true
 
     var body: some View {
         ZStack {
-            theme.theme.background.ignoresSafeArea()
-
-            if playlist.data.isEmpty {
+            if showSplash {
+                SplashView()
+                    .transition(.opacity)
+            } else if playlist.data.isEmpty {
                 AddPlaylistView()
+                    .transition(.opacity)
             } else {
                 MainTabView()
+                    .transition(.opacity)
             }
         }
         .task {
-            // Auto-reload the saved list on launch.
-            if playlist.hasPlaylist && playlist.data.isEmpty {
-                await playlist.reloadSaved()
-            }
+            // While the splash shows, try to restore the saved playlist.
+            async let restore: Void = {
+                if playlist.hasPlaylist && playlist.data.isEmpty {
+                    await playlist.reloadSaved()
+                }
+            }()
+            async let minimum: Void = {
+                try? await Task.sleep(nanoseconds: 2_200_000_000)
+            }()
+            _ = await (restore, minimum)
+            withAnimation(.easeInOut(duration: 0.5)) { showSplash = false }
         }
     }
 }
