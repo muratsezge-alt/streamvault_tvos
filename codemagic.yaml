@@ -7,7 +7,7 @@ workflows:
     # Codemagic UI → Integrations → App Store Connect içinde eklediğin
     # API anahtarının ADI ile birebir aynı olmalı.
     integrations:
-      app_store_connect: StreamVaultTV_ASC_Key
+      app_store_connect: Codemagic Key
 
     environment:
       xcode: latest
