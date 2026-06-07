@@ -39,7 +39,7 @@ targets:
           NSAllowsArbitraryLoads: true
         # Required tvOS keys — altool validates their presence
         CFBundleIcons:
-          CFBundlePrimaryIcon: "AppIcon"
+          CFBundlePrimaryIcon: "App Icon - Small"
         TVTopShelfImage:
           TVTopShelfPrimaryImage: "Top Shelf Image"
           TVTopShelfPrimaryImageWide: "Top Shelf Image Wide"
