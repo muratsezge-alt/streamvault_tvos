@@ -4,10 +4,8 @@ workflows:
     instance_type: mac_mini_m2
     max_build_duration: 60
 
-    # Codemagic UI → Integrations → App Store Connect içinde eklediğin
-    # API anahtarının ADI ile birebir aynı olmalı.
     integrations:
-      app_store_connect: Codemagic Key
+      app_store_connect: Codemagic Key   # <-- çalışan diğer uygulamanın adıyla aynı yap
 
     environment:
       xcode: latest
@@ -15,8 +13,7 @@ workflows:
         BUNDLE_ID: "com.murat.streamvault.tv"
         XCODE_PROJECT: "StreamVaultTV.xcodeproj"
         XCODE_SCHEME: "StreamVaultTV"
-        # App Store Connect → App → App Information → Apple ID (sayısal)
-        APP_STORE_APPLE_ID: 6777746035
+        APP_STORE_APPLE_ID: 6777746035   # <-- gerçek sayısal Apple ID
 
     scripts:
       - name: Install XcodeGen and generate the Xcode project
@@ -27,15 +24,21 @@ workflows:
 
       - name: Set up tvOS code signing
         script: |
+          set -e
           keychain initialize
-          # ÖNEMLİ: platform TV_OS + type TVOS_APP_STORE + --create
-          # (sertifika/profil yoksa otomatik oluşturur)
+          echo "===== fetch-signing-files ====="
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --platform TV_OS \
             --type TVOS_APP_STORE \
             --create
+          echo "===== add-certificates ====="
           keychain add-certificates
+          echo "===== use-profiles ====="
           xcode-project use-profiles
+          echo "===== installed profiles ====="
+          ls -la "$HOME/Library/MobileDevice/Provisioning Profiles/" || true
+          echo "===== signing settings in project ====="
+          xcodebuild -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -showBuildSettings 2>/dev/null | grep -Ei "PROVISIONING_PROFILE|CODE_SIGN|DEVELOPMENT_TEAM|BUNDLE_IDENT" || true
 
       - name: Build tvOS app (.ipa)
         script: |
