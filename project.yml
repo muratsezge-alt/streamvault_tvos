@@ -29,14 +29,42 @@ targets:
         DEVELOPMENT_TEAM: SGT92DDF82
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_IDENTITY: "Apple Distribution"
+        # Required so our Run Script can write to the app bundle
+        ENABLE_USER_SCRIPT_SANDBOXING: "NO"
     info:
       path: Resources/Info.plist
       properties:
         CFBundleDisplayName: StreamVault
         UIUserInterfaceStyle: Dark
-        CFBundleIcons:
-          CFBundlePrimaryIcon: "App Icon & Top Shelf Image"
-        TVTopShelfImage:
-          TVTopShelfPrimaryImageWide: "App Icon & Top Shelf Image"
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: true
+    # actool is not being invoked automatically, so we call it directly.
+    postCompileScripts:
+      - name: "Compile Asset Catalog (manual actool)"
+        script: |
+          set -e
+          echo "=== Manual actool invocation ==="
+          ACTOOL=$(xcrun -f actool)
+          echo "actool path: $ACTOOL"
+          echo "Compiling: $SRCROOT/Resources/Assets.xcassets"
+          echo "Output: $BUILT_PRODUCTS_DIR/$FULL_PRODUCT_NAME"
+
+          "$ACTOOL" \
+            --output-format human-readable-text \
+            --notices --warnings \
+            --output-partial-info-plist "$TARGET_TEMP_DIR/assetcatalog_generated_info.plist" \
+            --app-icon "App Icon & Top Shelf Image" \
+            --enable-on-demand-resources NO \
+            --target-device tv \
+            --minimum-deployment-target "$TVOS_DEPLOYMENT_TARGET" \
+            --platform "$PLATFORM_NAME" \
+            --product-type "$PRODUCT_TYPE" \
+            --compile "$BUILT_PRODUCTS_DIR/$FULL_PRODUCT_NAME" \
+            "$SRCROOT/Resources/Assets.xcassets"
+
+          echo "=== actool done, Assets.car check ==="
+          ls -lh "$BUILT_PRODUCTS_DIR/$FULL_PRODUCT_NAME/Assets.car" 2>/dev/null || echo "WARNING: Assets.car not found"
+        inputFiles:
+          - $(SRCROOT)/Resources/Assets.xcassets
+        outputFiles:
+          - $(BUILT_PRODUCTS_DIR)/$(FULL_PRODUCT_NAME)/Assets.car
