@@ -24,12 +24,11 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.murat.streamvault.tv
         TARGETED_DEVICE_FAMILY: "3"
-        ASSETCATALOG_COMPILER_APPICON_NAME: "App Icon & Top Shelf Image"
+        ASSETCATALOG_COMPILER_APPICON_NAME: "AppIcon"   # matches AppIcon.brandassets
         GENERATE_INFOPLIST_FILE: "NO"
         DEVELOPMENT_TEAM: SGT92DDF82
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_IDENTITY: "Apple Distribution"
-        # Required so our Run Script can write to the app bundle
         ENABLE_USER_SCRIPT_SANDBOXING: "NO"
     info:
       path: Resources/Info.plist
@@ -38,22 +37,27 @@ targets:
         UIUserInterfaceStyle: Dark
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: true
-    # actool is not being invoked automatically, so we call it directly.
+        # Required tvOS keys — altool validates their presence
+        CFBundleIcons:
+          CFBundlePrimaryIcon: "AppIcon"
+        TVTopShelfImage:
+          TVTopShelfPrimaryImage: "Top Shelf Image"
+          TVTopShelfPrimaryImageWide: "Top Shelf Image Wide"
     postCompileScripts:
       - name: "Compile Asset Catalog (manual actool)"
         script: |
           set -e
           echo "=== Manual actool invocation ==="
           ACTOOL=$(xcrun -f actool)
-          echo "actool path: $ACTOOL"
-          echo "Compiling: $SRCROOT/Resources/Assets.xcassets"
+          echo "actool: $ACTOOL"
+          echo "Catalog: $SRCROOT/Resources/Assets.xcassets"
           echo "Output: $BUILT_PRODUCTS_DIR/$FULL_PRODUCT_NAME"
 
           "$ACTOOL" \
             --output-format human-readable-text \
             --notices --warnings \
             --output-partial-info-plist "$TARGET_TEMP_DIR/assetcatalog_generated_info.plist" \
-            --app-icon "App Icon & Top Shelf Image" \
+            --app-icon "AppIcon" \
             --enable-on-demand-resources NO \
             --target-device tv \
             --minimum-deployment-target "$TVOS_DEPLOYMENT_TARGET" \
@@ -62,7 +66,9 @@ targets:
             --compile "$BUILT_PRODUCTS_DIR/$FULL_PRODUCT_NAME" \
             "$SRCROOT/Resources/Assets.xcassets"
 
-          echo "=== actool done, Assets.car check ==="
+          echo "=== Partial plist from actool ==="
+          cat "$TARGET_TEMP_DIR/assetcatalog_generated_info.plist" 2>/dev/null || echo "(not generated)"
+          echo "=== Assets.car check ==="
           ls -lh "$BUILT_PRODUCTS_DIR/$FULL_PRODUCT_NAME/Assets.car" 2>/dev/null || echo "WARNING: Assets.car not found"
         inputFiles:
           - $(SRCROOT)/Resources/Assets.xcassets
