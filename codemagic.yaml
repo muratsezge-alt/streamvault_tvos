@@ -9,11 +9,13 @@ workflows:
 
     environment:
       xcode: latest
+      groups:
+        - signing                                # CERTIFICATE_PRIVATE_KEY bu grupta
       vars:
         BUNDLE_ID: "com.murat.streamvault.tv"
         XCODE_PROJECT: "StreamVaultTV.xcodeproj"
         XCODE_SCHEME: "StreamVaultTV"
-        APP_STORE_APPLE_ID: 6777746035   # <-- gerçek sayısal Apple ID
+        APP_STORE_APPLE_ID: 6777746035           # <-- gerçek sayısal Apple ID
 
     scripts:
       - name: Install XcodeGen and generate the Xcode project
@@ -26,16 +28,15 @@ workflows:
         script: |
           set -e
           keychain initialize
-          echo "===== fetch-signing-files ====="
+          echo "===== fetch-signing-files (kalıcı anahtarla) ====="
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type TVOS_APP_STORE \
+            --certificate-key "@env:CERTIFICATE_PRIVATE_KEY" \
             --create
           echo "===== add-certificates ====="
           keychain add-certificates
           echo "===== use-profiles ====="
           xcode-project use-profiles
-          echo "===== installed profiles ====="
-          ls -la "$HOME/Library/MobileDevice/Provisioning Profiles/" || true
           echo "===== signing settings in project ====="
           xcodebuild -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -showBuildSettings 2>/dev/null | grep -Ei "PROVISIONING_PROFILE|CODE_SIGN|DEVELOPMENT_TEAM|BUNDLE_IDENT" || true
 
