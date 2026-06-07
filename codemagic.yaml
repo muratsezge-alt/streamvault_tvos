@@ -21,6 +21,8 @@ workflows:
       ios_signing:
         distribution_type: app_store
         bundle_identifier: com.murat.streamvault.tv
+        provisioning_profiles:
+          - StreamVault_tvOS_AppStore
 
     scripts:
       - name: Install XcodeGen and generate the Xcode project
