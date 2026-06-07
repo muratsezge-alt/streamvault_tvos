@@ -1,0 +1,6 @@
+# XcodeGen generates this — do not commit
+StreamVaultTV.xcodeproj/
+.build/
+DerivedData/
+*.xcuserstate
+.DS_Store
