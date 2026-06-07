@@ -47,6 +47,26 @@ workflows:
             --project "$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME"
 
+      - name: Inspect compiled asset catalog (diagnostics)
+        script: |
+          set -e
+          IPA_PATH=$(find build/ios/ipa -name "*.ipa" | head -1)
+          echo "IPA: $IPA_PATH"
+          rm -rf /tmp/ipa_inspect && mkdir -p /tmp/ipa_inspect
+          unzip -q "$IPA_PATH" -d /tmp/ipa_inspect
+          APP_PATH=$(find /tmp/ipa_inspect/Payload -maxdepth 1 -name "*.app" | head -1)
+          echo "APP: $APP_PATH"
+          echo "===== Info.plist: CFBundleIcons / TVTopShelfImage ====="
+          /usr/libexec/PlistBuddy -c "Print :CFBundleIcons" "$APP_PATH/Info.plist" || echo "(no CFBundleIcons)"
+          /usr/libexec/PlistBuddy -c "Print :TVTopShelfImage" "$APP_PATH/Info.plist" || echo "(no TVTopShelfImage)"
+          echo "===== Assets.car: compiled image/icon entries ====="
+          if [ -f "$APP_PATH/Assets.car" ]; then
+            xcrun --sdk appletvos assetutil --info "$APP_PATH/Assets.car" \
+              | grep -Ei '"Name"|"SizeOnDisk"|"Idiom"|AssetType|"RenditionName"' || true
+          else
+            echo "Assets.car NOT FOUND"
+          fi
+
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
