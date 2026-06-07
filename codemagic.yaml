@@ -18,27 +18,25 @@ workflows:
         APP_STORE_APPLE_ID: 6777746035           # <-- gerçek sayısal Apple ID
 
     scripts:
-      - name: Install XcodeGen and generate the Xcode project
+      - name: Inject Missing Info.plist Keys
         script: |
-          brew install xcodegen
-          export BUILD_NUMBER
-          xcodegen generate
+          PLIST_PATH="Resources/Info.plist"
+          mkdir -p $(dirname "$PLIST_PATH")
+          if [ ! -f "$PLIST_PATH" ]; then
+            echo '<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd"><plist version="1.0"><dict></dict></plist>' > "$PLIST_PATH"
+          fi
+          plutil -replace CFBundleIcons -xml '<dict><key>CFBundlePrimaryIcon</key><string>App Icon &amp; Top Shelf Image</string></dict>' "$PLIST_PATH"
+          plutil -replace TVTopShelfImage -xml '<dict><key>TVTopShelfPrimaryImageWide</key><string>App Icon &amp; Top Shelf Image</string></dict>' "$PLIST_PATH"
 
       - name: Set up tvOS code signing
         script: |
-          set -e
           keychain initialize
-          echo "===== fetch-signing-files (kalıcı anahtarla) ====="
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type TVOS_APP_STORE \
             --certificate-key "@env:CERTIFICATE_PRIVATE_KEY" \
             --create
-          echo "===== add-certificates ====="
           keychain add-certificates
-          echo "===== use-profiles ====="
           xcode-project use-profiles
-          echo "===== signing settings in project ====="
-          xcodebuild -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -showBuildSettings 2>/dev/null | grep -Ei "PROVISIONING_PROFILE|CODE_SIGN|DEVELOPMENT_TEAM|BUNDLE_IDENT" || true
 
       - name: Build tvOS app (.ipa)
         script: |
