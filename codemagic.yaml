@@ -5,67 +5,50 @@ workflows:
     max_build_duration: 60
 
     integrations:
-      app_store_connect: Codemagic Key   # <-- çalışan anahtar adınla aynı yap
+      app_store_connect: Codemagic Key   # <-- çalışan anahtar adın
 
     environment:
       xcode: latest
       groups:
-        - signing                                # CERTIFICATE_PRIVATE_KEY bu grupta
+        - signing
       vars:
         BUNDLE_ID: "com.murat.streamvault.tv"
         XCODE_PROJECT: "StreamVaultTV.xcodeproj"
         XCODE_SCHEME: "StreamVaultTV"
-        APP_STORE_APPLE_ID: 6777746035           # <-- gerçek sayısal Apple ID
+        APP_STORE_APPLE_ID: 6777746035            # <-- gerçek Apple ID
 
     scripts:
-      - name: Install XcodeGen and generate the Xcode project
+      - name: Install XcodeGen and generate project
         script: |
-          set -e
           brew install xcodegen
-          export BUILD_NUMBER
+          # Codemagic'in otomatik artan build numarasını CFBundleVersion'a göm.
+          BN="${BUILD_NUMBER:-1}"
+          echo "Setting CFBundleVersion to $BN"
+          python3 - "$BN" <<'PY'
+          import sys
+          bn = sys.argv[1]
+          s = open("project.yml").read().replace("${BUILD_NUMBER}", bn)
+          open("project.yml","w").write(s)
+          print("project.yml build number ->", bn)
+          PY
           xcodegen generate
 
       - name: Set up tvOS code signing
         script: |
           set -e
           keychain initialize
-          echo "===== fetch-signing-files (kalıcı anahtarla) ====="
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
             --type TVOS_APP_STORE \
             --certificate-key "@env:CERTIFICATE_PRIVATE_KEY" \
             --create
-          echo "===== add-certificates ====="
           keychain add-certificates
-          echo "===== use-profiles ====="
           xcode-project use-profiles
-          echo "===== signing settings in project ====="
-          xcodebuild -project "$XCODE_PROJECT" -scheme "$XCODE_SCHEME" -showBuildSettings 2>/dev/null | grep -Ei "PROVISIONING_PROFILE|CODE_SIGN|DEVELOPMENT_TEAM|BUNDLE_IDENT" || true
 
       - name: Build tvOS app (.ipa)
         script: |
           xcode-project build-ipa \
             --project "$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME"
-
-      - name: Inspect compiled asset catalog (diagnostics)
-        script: |
-          set -e
-          IPA_PATH=$(find build/ios/ipa -name "*.ipa" | head -1)
-          echo "IPA: $IPA_PATH"
-          rm -rf /tmp/ipa_inspect && mkdir -p /tmp/ipa_inspect
-          unzip -q "$IPA_PATH" -d /tmp/ipa_inspect
-          APP_PATH=$(find /tmp/ipa_inspect/Payload -maxdepth 1 -name "*.app" | head -1)
-          echo "APP: $APP_PATH"
-          echo "===== Info.plist: CFBundleIcons / TVTopShelfImage ====="
-          /usr/libexec/PlistBuddy -c "Print :CFBundleIcons" "$APP_PATH/Info.plist" || echo "(no CFBundleIcons)"
-          /usr/libexec/PlistBuddy -c "Print :TVTopShelfImage" "$APP_PATH/Info.plist" || echo "(no TVTopShelfImage)"
-          echo "===== Assets.car: compiled image/icon entries ====="
-          if [ -f "$APP_PATH/Assets.car" ]; then
-            xcrun --sdk appletvos assetutil --info "$APP_PATH/Assets.car" \
-              | grep -Ei '"Name"|"SizeOnDisk"|"Idiom"|AssetType|"RenditionName"' || true
-          else
-            echo "Assets.car NOT FOUND"
-          fi
 
     artifacts:
       - build/ios/ipa/*.ipa
