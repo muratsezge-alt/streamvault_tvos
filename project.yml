@@ -1,16 +1,38 @@
-scripts:
-      - name: Set up tvOS code signing
-        script: |
-          keychain initialize
-          app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --type TVOS_APP_STORE \
-            --certificate-key "@env:CERTIFICATE_PRIVATE_KEY" \
-            --create
-          keychain add-certificates
-          xcode-project use-profiles
+name: StreamVaultTV
+options:
+  bundleIdPrefix: com.murat.streamvault
+  createIntermediateGroups: true
+  deploymentTarget:
+    tvOS: "17.0"
 
-      - name: Build tvOS app (.ipa)
-        script: |
-          xcode-project build-ipa \
-            --project "$XCODE_PROJECT" \
-            --scheme "$XCODE_SCHEME"
+settings:
+  base:
+    MARKETING_VERSION: "1.0.0"
+    CURRENT_PROJECT_VERSION: "${BUILD_NUMBER}"
+    SWIFT_VERSION: "5.0"
+
+targets:
+  StreamVaultTV:
+    type: application
+    platform: tvOS
+    deploymentTarget: "17.0"
+    sources:
+      - path: Sources
+    resources:
+      - path: Resources/Assets.xcassets
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.murat.streamvault.tv
+        TARGETED_DEVICE_FAMILY: "3"
+        ASSETCATALOG_COMPILER_APPICON_NAME: "App Icon & Top Shelf Image"
+        GENERATE_INFOPLIST_FILE: "NO"
+        DEVELOPMENT_TEAM: SGT92DDF82
+        CODE_SIGN_STYLE: Manual
+        CODE_SIGN_IDENTITY: "Apple Distribution"
+    info:
+      path: Resources/Info.plist
+      properties:
+        CFBundleDisplayName: StreamVault
+        UIUserInterfaceStyle: Dark
+        NSAppTransportSecurity:
+          NSAllowsArbitraryLoads: true
