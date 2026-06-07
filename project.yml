@@ -25,14 +25,13 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: com.murat.streamvault.tv
         TARGETED_DEVICE_FAMILY: "3"
         ASSETCATALOG_COMPILER_APPICON_NAME: "App Icon & Top Shelf Image"
-        GENERATE_INFOPLIST_FILE: "NO"
+        GENERATE_INFOPLIST_FILE: "YES"
         DEVELOPMENT_TEAM: SGT92DDF82
         CODE_SIGN_STYLE: Manual
         CODE_SIGN_IDENTITY: "Apple Distribution"
-    info:
-      path: Resources/Info.plist
-      properties:
-        CFBundleDisplayName: StreamVault
-        UIUserInterfaceStyle: Dark
-        NSAppTransportSecurity:
+        INFOPLIST_KEY_CFBundleIcons_CFBundlePrimaryIcon: "App Icon & Top Shelf Image"
+        INFOPLIST_KEY_TVTopShelfImage_TVTopShelfPrimaryImageWide: "App Icon & Top Shelf Image"
+        INFOPLIST_KEY_CFBundleDisplayName: "StreamVault"
+        INFOPLIST_KEY_UIUserInterfaceStyle: "Dark"
+        INFOPLIST_KEY_NSAppTransportSecurity:
           NSAllowsArbitraryLoads: true
