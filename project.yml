@@ -34,6 +34,8 @@ targets:
       path: Resources/Info.plist
       properties:
         CFBundleDisplayName: StreamVault
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         UIUserInterfaceStyle: Dark
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: true
