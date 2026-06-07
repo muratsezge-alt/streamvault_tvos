@@ -5,7 +5,7 @@ workflows:
     max_build_duration: 60
 
     integrations:
-      app_store_connect: Codemagic Key   # <-- çalışan diğer uygulamanın adıyla aynı yap
+      app_store_connect: Codemagic Key   # <-- çalışan anahtar adınla aynı yap
 
     environment:
       xcode: latest
@@ -28,7 +28,6 @@ workflows:
           keychain initialize
           echo "===== fetch-signing-files ====="
           app-store-connect fetch-signing-files "$BUNDLE_ID" \
-            --platform TV_OS \
             --type TVOS_APP_STORE \
             --create
           echo "===== add-certificates ====="
