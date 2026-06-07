@@ -5,7 +5,7 @@ workflows:
     max_build_duration: 60
 
     integrations:
-      app_store_connect: Codemagic Key   # <-- çalışan anahtar adın
+      app_store_connect: Codemagic Key
 
     environment:
       xcode: latest
@@ -15,22 +15,18 @@ workflows:
         BUNDLE_ID: "com.murat.streamvault.tv"
         XCODE_PROJECT: "StreamVaultTV.xcodeproj"
         XCODE_SCHEME: "StreamVaultTV"
-        APP_STORE_APPLE_ID: 6777746035            # <-- gerçek Apple ID
+        APP_STORE_APPLE_ID: 6777746035
 
     scripts:
       - name: Install XcodeGen and generate project
         script: |
           brew install xcodegen
-          # Codemagic'in otomatik artan build numarasını CFBundleVersion'a göm.
-          BN="${BUILD_NUMBER:-1}"
+          # Guaranteed-increasing build number (Unix timestamp).
+          BN=$(date +%s)
           echo "Setting CFBundleVersion to $BN"
-          python3 - "$BN" <<'PY'
-          import sys
-          bn = sys.argv[1]
-          s = open("project.yml").read().replace("${BUILD_NUMBER}", bn)
-          open("project.yml","w").write(s)
-          print("project.yml build number ->", bn)
-          PY
+          sed -i '' "s|\${BUILD_NUMBER}|$BN|g" project.yml
+          echo "=== version line after replace ==="
+          grep CURRENT_PROJECT_VERSION project.yml
           xcodegen generate
 
       - name: Set up tvOS code signing
