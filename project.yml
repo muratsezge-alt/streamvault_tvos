@@ -34,5 +34,9 @@ targets:
       properties:
         CFBundleDisplayName: StreamVault
         UIUserInterfaceStyle: Dark
+        CFBundleIcons:
+          CFBundlePrimaryIcon: "App Icon & Top Shelf Image"
+        TVTopShelfImage:
+          TVTopShelfPrimaryImageWide: "App Icon & Top Shelf Image"
         NSAppTransportSecurity:
           NSAllowsArbitraryLoads: true
