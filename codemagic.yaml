@@ -21,12 +21,8 @@ workflows:
       - name: Install XcodeGen and generate project
         script: |
           brew install xcodegen
-          # Guaranteed-increasing build number (Unix timestamp).
-          BN=$(date +%s)
-          echo "Setting CFBundleVersion to $BN"
-          sed -i '' "s|\${BUILD_NUMBER}|$BN|g" project.yml
-          echo "=== version line after replace ==="
-          grep CURRENT_PROJECT_VERSION project.yml
+          echo "=== version (manual, from project.yml) ==="
+          grep -E "MARKETING_VERSION|CURRENT_PROJECT_VERSION" project.yml
           xcodegen generate
 
       - name: Set up tvOS code signing
