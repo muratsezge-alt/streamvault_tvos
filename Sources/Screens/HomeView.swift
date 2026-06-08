@@ -1,6 +1,6 @@
 import SwiftUI
 
-// MARK: - Home (launch) screen
+enum HomeSection: Hashable { case live, movies, series, favorites, settings }
 
 struct HomeView: View {
     @EnvironmentObject var playlist: PlaylistStore
@@ -28,27 +28,35 @@ struct HomeView: View {
                 VStack(spacing: 0) {
                     topBar(t)
                     Spacer(minLength: 24)
-                    HStack(spacing: 40) {
-                        HomeCard(title: "CANLI TV", icon: "tv",
-                                 gradient: [Color(hex: 0x2E8B57), Color(hex: 0x1E5FA8)],
+                    HStack(spacing: 44) {
+                        HomeCard(title: "CANLI TV", icon: "tv.fill", accent: Color(hex: 0x4A90E2),
                                  count: playlist.data.channels.count, suffix: "kanal",
-                                 destination: AnyView(LiveView()), theme: t)
-                        HomeCard(title: "FİLMLER", icon: "film",
-                                 gradient: [Color(hex: 0xC0392B), Color(hex: 0xE67E22)],
+                                 value: .live, theme: t)
+                        HomeCard(title: "FİLMLER", icon: "film.fill", accent: t.gold,
                                  count: playlist.data.movies.count, suffix: "film",
-                                 destination: AnyView(MoviesView()), theme: t)
-                        HomeCard(title: "DİZİLER", icon: "rectangle.stack",
-                                 gradient: [Color(hex: 0x7D3C98), Color(hex: 0x2980B9)],
+                                 value: .movies, theme: t)
+                        HomeCard(title: "DİZİLER", icon: "rectangle.stack.fill", accent: Color(hex: 0x9B6DD6),
                                  count: playlist.data.series.count, suffix: "dizi",
-                                 destination: AnyView(SeriesView()), theme: t)
+                                 value: .series, theme: t)
                     }
-                    .frame(maxHeight: 440)
+                    .frame(maxHeight: 460)
                     Spacer(minLength: 24)
                     footer(t)
                 }
-                .padding(.horizontal, 70)
-                .padding(.vertical, 50)
+                .padding(.horizontal, 80)
+                .padding(.vertical, 56)
             }
+            .navigationDestination(for: HomeSection.self) { section in
+                switch section {
+                case .live:      LiveView()
+                case .movies:    MoviesView()
+                case .series:    SeriesView()
+                case .favorites: FavoritesView()
+                case .settings:  SettingsView()
+                }
+            }
+            .navigationDestination(for: Movie.self) { MovieDetailView(movie: $0) }
+            .navigationDestination(for: Series.self) { SeriesDetailView(series: $0) }
         }
         .onReceive(clock) { now = $0 }
     }
@@ -56,7 +64,7 @@ struct HomeView: View {
     private func topBar(_ t: AppTheme) -> some View {
         HStack(spacing: 22) {
             Image("AppLogo").resizable().scaledToFit()
-                .frame(width: 64, height: 64)
+                .frame(width: 66, height: 66)
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             VStack(alignment: .leading, spacing: 0) {
                 Text("StreamVault").font(.title2.bold()).foregroundStyle(t.textPrimary)
@@ -68,10 +76,10 @@ struct HomeView: View {
                 Text(dateText).font(.callout).foregroundStyle(t.textSecondary)
             }
             .padding(.trailing, 12)
-            NavigationLink(destination: FavoritesView()) {
+            NavigationLink(value: HomeSection.favorites) {
                 Image(systemName: "star.fill").font(.title3)
             }.buttonStyle(.card)
-            NavigationLink(destination: SettingsView()) {
+            NavigationLink(value: HomeSection.settings) {
                 Image(systemName: "gearshape.fill").font(.title3)
             }.buttonStyle(.card)
         }
@@ -88,36 +96,52 @@ struct HomeView: View {
     }
 }
 
-// MARK: - Big launch card
-
+/// Premium brand card: navy glass base, gold icon badge, subtle accent glow, focus lift.
 struct HomeCard: View {
     let title: String
     let icon: String
-    let gradient: [Color]
+    let accent: Color
     let count: Int
     let suffix: String
-    let destination: AnyView
+    let value: HomeSection
     var theme: AppTheme
+    @FocusState private var focused: Bool
 
     var body: some View {
-        NavigationLink(destination: destination) {
+        NavigationLink(value: value) {
             ZStack {
-                LinearGradient(colors: gradient, startPoint: .topLeading, endPoint: .bottomTrailing)
-                LinearGradient(colors: [.clear, .black.opacity(0.35)], startPoint: .top, endPoint: .bottom)
-                VStack(spacing: 16) {
-                    Image(systemName: icon).font(.system(size: 78, weight: .semibold))
-                        .foregroundStyle(.white)
-                    Text(title).font(.system(size: 32, weight: .bold)).foregroundStyle(.white)
-                    Text("\(count) \(suffix)").font(.headline).foregroundStyle(.white.opacity(0.85))
+                RoundedRectangle(cornerRadius: 30, style: .continuous)
+                    .fill(LinearGradient(colors: [theme.surface, theme.background],
+                                         startPoint: .top, endPoint: .bottom))
+                RadialGradient(colors: [accent.opacity(focused ? 0.5 : 0.3), .clear],
+                               center: .top, startRadius: 10, endRadius: 380)
+                    .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
+                VStack(spacing: 22) {
+                    ZStack {
+                        Circle().fill(theme.gold.opacity(0.16)).frame(width: 124, height: 124)
+                        Image(systemName: icon).font(.system(size: 56, weight: .semibold))
+                            .foregroundStyle(theme.gold)
+                    }
+                    Text(title).font(.system(size: 30, weight: .bold)).foregroundStyle(theme.textPrimary)
+                    Text("\(count) \(suffix)").font(.headline).foregroundStyle(theme.textSecondary)
                 }
             }
+            .overlay(
+                RoundedRectangle(cornerRadius: 30, style: .continuous)
+                    .stroke(focused ? theme.gold : theme.gold.opacity(0.2), lineWidth: focused ? 4 : 1)
+            )
+            .scaleEffect(focused ? 1.05 : 1.0)
+            .shadow(color: focused ? accent.opacity(0.55) : .black.opacity(0.35),
+                    radius: focused ? 34 : 14, y: 12)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .buttonStyle(.card)
+        .buttonStyle(.plain)
+        .focused($focused)
+        .animation(.easeOut(duration: 0.18), value: focused)
     }
 }
 
-// MARK: - Shared left category sidebar (with search)
+// MARK: - Shared left category sidebar (premium, with search)
 
 struct CategorySidebar: View {
     let title: String
@@ -127,14 +151,16 @@ struct CategorySidebar: View {
     var theme: AppTheme
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text(title).font(.title.bold()).foregroundStyle(theme.gold)
+        VStack(alignment: .leading, spacing: 18) {
+            Text(title).font(.largeTitle.bold()).foregroundStyle(theme.gold)
             TextField("Ara…", text: $query)
-                .padding(12)
+                .padding(14)
                 .background(theme.surface)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(theme.gold.opacity(0.2), lineWidth: 1))
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: 8) {
                     SidebarRow(label: "Tümü", selected: selected == nil, theme: theme) { selected = nil }
                     ForEach(categories, id: \.self) { c in
                         SidebarRow(label: c, selected: selected == c, theme: theme) { selected = c }
@@ -142,8 +168,8 @@ struct CategorySidebar: View {
                 }
             }
         }
-        .frame(width: 380)
-        .padding(28)
+        .frame(width: 420)
+        .padding(36)
         .background(theme.backgroundSecondary.ignoresSafeArea())
     }
 }
@@ -153,18 +179,25 @@ struct SidebarRow: View {
     let selected: Bool
     var theme: AppTheme
     let action: () -> Void
+    @FocusState private var focused: Bool
+
     var body: some View {
         Button(action: action) {
-            HStack {
+            HStack(spacing: 10) {
                 Text(label).lineLimit(1)
                 Spacer()
-                if selected { Image(systemName: "checkmark") }
+                if selected { Image(systemName: "checkmark.circle.fill") }
             }
             .font(.headline)
             .foregroundStyle(selected ? theme.gold : theme.textPrimary)
+            .padding(.vertical, 12).padding(.horizontal, 16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.vertical, 10).padding(.horizontal, 14)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(focused ? theme.gold.opacity(0.22) : (selected ? theme.surface : Color.clear))
+            )
         }
-        .buttonStyle(.card)
+        .buttonStyle(.plain)
+        .focused($focused)
     }
 }

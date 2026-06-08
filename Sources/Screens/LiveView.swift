@@ -7,7 +7,7 @@ struct LiveView: View {
     @State private var selectedGroup: String? = nil
     @State private var query = ""
     @State private var player: PlayerItem?
-    private let columns = [GridItem(.adaptive(minimum: 280), spacing: 40)]
+    private let columns = [GridItem(.adaptive(minimum: 340), spacing: 44)]
 
     private var groups: [String] {
         Array(Set(playlist.data.channels.compactMap { $0.groupTitle })).sorted()

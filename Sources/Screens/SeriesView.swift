@@ -5,7 +5,7 @@ struct SeriesView: View {
     @EnvironmentObject var theme: ThemeStore
     @State private var selectedGroup: String? = nil
     @State private var query = ""
-    private let columns = [GridItem(.adaptive(minimum: 240), spacing: 40)]
+    private let columns = [GridItem(.adaptive(minimum: 300), spacing: 44)]
 
     private var groups: [String] {
         Array(Set(playlist.data.series.compactMap { $0.groupTitle })).sorted()
@@ -42,7 +42,6 @@ struct SeriesView: View {
                 }
             }
         }
-        .navigationDestination(for: Series.self) { SeriesDetailView(series: $0) }
     }
 }
 
