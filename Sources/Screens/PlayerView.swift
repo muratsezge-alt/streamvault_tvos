@@ -53,7 +53,7 @@ final class VLCPlayerModel: NSObject, ObservableObject {
             let lengthMs = Int(self.player.media?.length.intValue ?? 0)
             if lengthMs > 1000 {
                 self.isLive = false
-                let timeMs = Int(self.player.time?.intValue ?? 0)
+                let timeMs = Int(self.player.time.intValue)
                 self.progress = min(1, max(0, Double(timeMs) / Double(lengthMs)))
                 self.elapsed = Self.fmt(timeMs)
                 self.remaining = "-" + Self.fmt(max(0, lengthMs - timeMs))

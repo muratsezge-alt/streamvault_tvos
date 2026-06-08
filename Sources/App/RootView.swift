@@ -19,16 +19,15 @@ struct RootView: View {
             }
         }
         .task {
-            // While the splash shows, try to restore the saved playlist.
-            async let restore: Void = {
-                if playlist.hasPlaylist && playlist.data.isEmpty {
-                    await playlist.reloadSaved()
-                }
-            }()
-            async let minimum: Void = {
-                try? await Task.sleep(nanoseconds: 2_200_000_000)
-            }()
-            _ = await (restore, minimum)
+            // Restore saved playlist while the splash shows (main-actor safe).
+            let start = Date()
+            if playlist.hasPlaylist && playlist.data.isEmpty {
+                await playlist.reloadSaved()
+            }
+            let elapsed = Date().timeIntervalSince(start)
+            if elapsed < 2.0 {
+                try? await Task.sleep(nanoseconds: UInt64((2.0 - elapsed) * 1_000_000_000))
+            }
             withAnimation(.easeInOut(duration: 0.5)) { showSplash = false }
         }
     }
