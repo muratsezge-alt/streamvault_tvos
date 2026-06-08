@@ -10,15 +10,11 @@ struct PlayerItem: Identifiable {
 
 /// VLC-backed player: handles raw MPEG-TS (.ts), MKV, AVI, HLS, MP4 — everything
 /// a real IPTV stream throws at it (AVPlayer cannot).
-final class VLCPlayerModel: NSObject, ObservableObject, VLCMediaPlayerDelegate {
+final class VLCPlayerModel: NSObject, ObservableObject {
     let player = VLCMediaPlayer()
     @Published var failed = false
     @Published var buffering = true
-
-    override init() {
-        super.init()
-        player.delegate = self
-    }
+    private var monitor: Timer?
 
     func attach(to view: UIView) { player.drawable = view }
 
@@ -28,23 +24,34 @@ final class VLCPlayerModel: NSObject, ObservableObject, VLCMediaPlayerDelegate {
         media.addOption(":network-caching=1500")   // smoother live streams
         player.media = media
         player.play()
+        startMonitoring()
     }
 
-    func stop() { player.stop() }
-
-    func mediaPlayerStateChanged(_ aNotification: Notification!) {
-        DispatchQueue.main.async {
-            switch self.player.state {
-            case .error:
-                self.failed = true; self.buffering = false
-            case .playing:
-                self.failed = false; self.buffering = false
-            case .buffering, .opening:
-                self.buffering = true
-            default:
-                break
+    /// Poll the player directly — does not depend on delegate callback signatures,
+    /// which vary between VLCKit versions.
+    private func startMonitoring() {
+        monitor?.invalidate()
+        var elapsed = 0.0
+        monitor = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            elapsed += 0.5
+            if self.player.isPlaying {
+                self.buffering = false
+                self.failed = false
+            } else if self.player.state == .error {
+                self.failed = true
+                self.buffering = false
+            } else if elapsed > 20 && !self.player.isPlaying {
+                // Gave it 20s and still nothing → surface an error.
+                self.failed = true
+                self.buffering = false
             }
         }
+    }
+
+    func stop() {
+        monitor?.invalidate(); monitor = nil
+        player.stop()
     }
 }
 

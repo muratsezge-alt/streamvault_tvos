@@ -14,7 +14,7 @@ struct RootView: View {
                 AddPlaylistView()
                     .transition(.opacity)
             } else {
-                MainTabView()
+                HomeView()
                     .transition(.opacity)
             }
         }

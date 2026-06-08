@@ -3,31 +3,46 @@ import SwiftUI
 struct SeriesView: View {
     @EnvironmentObject var playlist: PlaylistStore
     @EnvironmentObject var theme: ThemeStore
+    @State private var selectedGroup: String? = nil
+    @State private var query = ""
     private let columns = [GridItem(.adaptive(minimum: 240), spacing: 40)]
+
+    private var groups: [String] {
+        Array(Set(playlist.data.series.compactMap { $0.groupTitle })).sorted()
+    }
+    private var filtered: [Series] {
+        playlist.data.series.filter { s in
+            (selectedGroup == nil || s.groupTitle == selectedGroup) &&
+            (query.isEmpty || s.name.localizedCaseInsensitiveContains(query))
+        }
+    }
 
     var body: some View {
         let t = theme.theme
-        NavigationStack {
+        HStack(spacing: 0) {
+            CategorySidebar(title: "Diziler", categories: groups,
+                            selected: $selectedGroup, query: $query, theme: t)
             ZStack {
                 t.background.ignoresSafeArea()
-                ScrollView {
-                    if playlist.data.series.isEmpty {
-                        EmptyHint(text: "Bu listede dizi bulunamadı.", theme: t)
-                    } else {
+                if playlist.data.series.isEmpty {
+                    EmptyHint(text: "Bu listede dizi bulunamadı.", theme: t)
+                } else {
+                    ScrollView {
                         LazyVGrid(columns: columns, spacing: 50) {
-                            ForEach(playlist.data.series) { s in
+                            ForEach(filtered) { s in
                                 NavigationLink(value: s) {
                                     PosterCard(title: s.name, imageURL: s.coverURL,
                                                subtitle: "\(s.episodes.count) bölüm", theme: t)
                                 }
                                 .buttonStyle(.card)
                             }
-                        }.padding(60)
+                        }
+                        .padding(50)
                     }
                 }
             }
-            .navigationDestination(for: Series.self) { SeriesDetailView(series: $0) }
         }
+        .navigationDestination(for: Series.self) { SeriesDetailView(series: $0) }
     }
 }
 
