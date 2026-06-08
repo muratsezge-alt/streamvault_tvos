@@ -96,7 +96,7 @@ struct HomeView: View {
     }
 }
 
-/// Premium brand card: navy glass base, gold icon badge, subtle accent glow, focus lift.
+/// Premium brand card. Uses the system `.card` focus (lift + shine, no white frame).
 struct HomeCard: View {
     let title: String
     let icon: String
@@ -105,17 +105,14 @@ struct HomeCard: View {
     let suffix: String
     let value: HomeSection
     var theme: AppTheme
-    @FocusState private var focused: Bool
 
     var body: some View {
         NavigationLink(value: value) {
             ZStack {
-                RoundedRectangle(cornerRadius: 30, style: .continuous)
-                    .fill(LinearGradient(colors: [theme.surface, theme.background],
-                                         startPoint: .top, endPoint: .bottom))
-                RadialGradient(colors: [accent.opacity(focused ? 0.5 : 0.3), .clear],
+                LinearGradient(colors: [theme.surface, theme.background],
+                               startPoint: .top, endPoint: .bottom)
+                RadialGradient(colors: [accent.opacity(0.40), .clear],
                                center: .top, startRadius: 10, endRadius: 380)
-                    .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
                 VStack(spacing: 22) {
                     ZStack {
                         Circle().fill(theme.gold.opacity(0.16)).frame(width: 124, height: 124)
@@ -126,39 +123,23 @@ struct HomeCard: View {
                     Text("\(count) \(suffix)").font(.headline).foregroundStyle(theme.textSecondary)
                 }
             }
-            .overlay(
-                RoundedRectangle(cornerRadius: 30, style: .continuous)
-                    .stroke(focused ? theme.gold : theme.gold.opacity(0.2), lineWidth: focused ? 4 : 1)
-            )
-            .scaleEffect(focused ? 1.05 : 1.0)
-            .shadow(color: focused ? accent.opacity(0.55) : .black.opacity(0.35),
-                    radius: focused ? 34 : 14, y: 12)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
-        .buttonStyle(.plain)
-        .focused($focused)
-        .animation(.easeOut(duration: 0.18), value: focused)
+        .buttonStyle(.card)
     }
 }
 
-// MARK: - Shared left category sidebar (premium, with search)
+// MARK: - Shared left category sidebar (categories only; search is via .searchable)
 
 struct CategorySidebar: View {
     let title: String
     let categories: [String]
     @Binding var selected: String?
-    @Binding var query: String
     var theme: AppTheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             Text(title).font(.largeTitle.bold()).foregroundStyle(theme.gold)
-            TextField("Ara…", text: $query)
-                .padding(14)
-                .background(theme.surface)
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(theme.gold.opacity(0.2), lineWidth: 1))
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 8) {
                     SidebarRow(label: "Tümü", selected: selected == nil, theme: theme) { selected = nil }
@@ -168,7 +149,7 @@ struct CategorySidebar: View {
                 }
             }
         }
-        .frame(width: 420)
+        .frame(width: 440)
         .padding(36)
         .background(theme.backgroundSecondary.ignoresSafeArea())
     }
@@ -179,25 +160,22 @@ struct SidebarRow: View {
     let selected: Bool
     var theme: AppTheme
     let action: () -> Void
-    @FocusState private var focused: Bool
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 10) {
-                Text(label).lineLimit(1)
-                Spacer()
+                Text(label)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.7)
+                    .multilineTextAlignment(.leading)
+                Spacer(minLength: 6)
                 if selected { Image(systemName: "checkmark.circle.fill") }
             }
             .font(.headline)
             .foregroundStyle(selected ? theme.gold : theme.textPrimary)
-            .padding(.vertical, 12).padding(.horizontal, 16)
+            .padding(.vertical, 14).padding(.horizontal, 18)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(focused ? theme.gold.opacity(0.22) : (selected ? theme.surface : Color.clear))
-            )
         }
-        .buttonStyle(.plain)
-        .focused($focused)
+        .buttonStyle(.card)
     }
 }

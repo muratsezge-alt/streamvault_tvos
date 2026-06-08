@@ -23,7 +23,7 @@ struct LiveView: View {
         let t = theme.theme
         HStack(spacing: 0) {
             CategorySidebar(title: "Canlı TV", categories: groups,
-                            selected: $selectedGroup, query: $query, theme: t)
+                            selected: $selectedGroup, theme: t)
             ZStack {
                 t.background.ignoresSafeArea()
                 if playlist.data.channels.isEmpty {
@@ -53,6 +53,7 @@ struct LiveView: View {
                 }
             }
         }
+        .searchable(text: $query, placement: .automatic, prompt: "Kanal ara")
         .fullScreenCover(item: $player) { PlayerView(item: $0) }
     }
 }

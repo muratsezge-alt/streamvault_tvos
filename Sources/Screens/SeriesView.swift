@@ -21,7 +21,7 @@ struct SeriesView: View {
         let t = theme.theme
         HStack(spacing: 0) {
             CategorySidebar(title: "Diziler", categories: groups,
-                            selected: $selectedGroup, query: $query, theme: t)
+                            selected: $selectedGroup, theme: t)
             ZStack {
                 t.background.ignoresSafeArea()
                 if playlist.data.series.isEmpty {
@@ -42,6 +42,7 @@ struct SeriesView: View {
                 }
             }
         }
+        .searchable(text: $query, placement: .automatic, prompt: "Dizi ara")
     }
 }
 
