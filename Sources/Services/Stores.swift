@@ -28,16 +28,8 @@ final class PlaylistStore: ObservableObject {
         isLoading = true
         errorMessage = nil
         do {
-            var request = URLRequest(url: url)
-            request.timeoutInterval = 30
-            request.setValue("VLC/3.0 LibVLC/3.0", forHTTPHeaderField: "User-Agent")
-            let (bytes, response) = try await URLSession.shared.data(for: request)
-            if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
-                throw NSError(domain: "StreamVault", code: http.statusCode,
-                              userInfo: [NSLocalizedDescriptionKey: "Sunucu \(http.statusCode) döndürdü."])
-            }
-            let text = String(data: bytes, encoding: .utf8) ?? String(decoding: bytes, as: UTF8.self)
-            let parsed = M3UParser.parse(text)
+            // Fetch + parse run OFF the main actor so a huge playlist never freezes the UI.
+            let parsed = try await Self.fetchAndParse(url: url)
             if parsed.isEmpty {
                 throw NSError(domain: "StreamVault", code: -2,
                               userInfo: [NSLocalizedDescriptionKey: "Liste boş ya da M3U formatında değil."])
@@ -48,6 +40,20 @@ final class PlaylistStore: ObservableObject {
             errorMessage = "Liste yüklenemedi: \(error.localizedDescription)"
         }
         isLoading = false
+    }
+
+    /// nonisolated → executes on a background executor, keeping the main thread free.
+    nonisolated static func fetchAndParse(url: URL) async throws -> ParsedPlaylist {
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 30
+        request.setValue("VLC/3.0 LibVLC/3.0", forHTTPHeaderField: "User-Agent")
+        let (bytes, response) = try await URLSession.shared.data(for: request)
+        if let http = response as? HTTPURLResponse, !(200...299).contains(http.statusCode) {
+            throw NSError(domain: "StreamVault", code: http.statusCode,
+                          userInfo: [NSLocalizedDescriptionKey: "Sunucu \(http.statusCode) döndürdü."])
+        }
+        let text = String(decoding: bytes, as: UTF8.self)
+        return M3UParser.parse(text)
     }
 
     func reloadSaved() async {
