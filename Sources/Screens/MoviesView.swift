@@ -18,7 +18,7 @@ struct MoviesView: View {
         let t = theme.theme
         HStack(spacing: 0) {
             CategorySidebar(title: "Filmler", categories: groups,
-                            selected: $selectedGroup, searchKind: .movies, theme: t)
+                            selected: $selectedGroup, searchKind: .movies, historyKind: .movies, historyLabel: "İzlemeye Devam Et", theme: t)
             ZStack {
                 t.background.ignoresSafeArea()
                 if playlist.data.movies.isEmpty {
