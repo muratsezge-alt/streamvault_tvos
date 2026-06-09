@@ -8,6 +8,7 @@ struct SearchView: View {
 
     @EnvironmentObject var playlist: PlaylistStore
     @EnvironmentObject var theme: ThemeStore
+    @EnvironmentObject var history: HistoryStore
     @State private var query = ""
     @State private var player: PlayerItem?
 
@@ -76,7 +77,7 @@ struct SearchView: View {
                     switch kind {
                     case .channels:
                         ForEach(channelResults) { ch in
-                            Button { player = PlayerItem(title: ch.name, url: ch.streamURL) } label: {
+                            Button { history.recordChannel(ch.id); player = PlayerItem(title: ch.name, url: ch.streamURL, isLive: true) } label: {
                                 ChannelCard(name: ch.name, logoURL: ch.logoURL, theme: t)
                             }.buttonStyle(.card)
                         }

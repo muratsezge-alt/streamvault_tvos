@@ -18,7 +18,7 @@ struct SeriesView: View {
         let t = theme.theme
         HStack(spacing: 0) {
             CategorySidebar(title: "Diziler", categories: groups,
-                            selected: $selectedGroup, searchKind: .series, theme: t)
+                            selected: $selectedGroup, searchKind: .series, historyKind: .series, historyLabel: "İzlemeye Devam Et", theme: t)
             ZStack {
                 t.background.ignoresSafeArea()
                 if playlist.data.series.isEmpty {
@@ -45,6 +45,7 @@ struct SeriesView: View {
 struct SeriesDetailView: View {
     let series: Series
     @EnvironmentObject var theme: ThemeStore
+    @EnvironmentObject var history: HistoryStore
     @State private var season: Int = 1
     @State private var player: PlayerItem?
 
@@ -68,6 +69,7 @@ struct SeriesDetailView: View {
 
                     ForEach(episodesForCurrentSeason) { ep in
                         Button {
+                            history.recordSeries(series.id)
                             player = PlayerItem(title: ep.name, url: ep.streamURL)
                         } label: {
                             HStack {

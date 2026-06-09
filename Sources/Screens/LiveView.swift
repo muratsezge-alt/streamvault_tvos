@@ -4,6 +4,7 @@ struct LiveView: View {
     @EnvironmentObject var playlist: PlaylistStore
     @EnvironmentObject var theme: ThemeStore
     @EnvironmentObject var favorites: FavoritesStore
+    @EnvironmentObject var history: HistoryStore
     @State private var selectedGroup: String? = nil
     @State private var player: PlayerItem?
     private let columns = [GridItem(.adaptive(minimum: 340), spacing: 44)]
@@ -20,7 +21,7 @@ struct LiveView: View {
         let t = theme.theme
         HStack(spacing: 0) {
             CategorySidebar(title: "Canlı TV", categories: groups,
-                            selected: $selectedGroup, searchKind: .channels, theme: t)
+                            selected: $selectedGroup, searchKind: .channels, historyKind: .channels, historyLabel: "Son İzlenenler", theme: t)
             ZStack {
                 t.background.ignoresSafeArea()
                 if playlist.data.channels.isEmpty {
@@ -30,7 +31,8 @@ struct LiveView: View {
                         LazyVGrid(columns: columns, spacing: 50) {
                             ForEach(filtered) { ch in
                                 Button {
-                                    player = PlayerItem(title: ch.name, url: ch.streamURL)
+                                    history.recordChannel(ch.id)
+                                    player = PlayerItem(title: ch.name, url: ch.streamURL, isLive: true)
                                 } label: {
                                     ChannelCard(name: ch.name, logoURL: ch.logoURL, theme: t)
                                 }

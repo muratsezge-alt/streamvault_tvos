@@ -5,6 +5,7 @@ struct PlayerItem: Identifiable {
     let id = UUID()
     let title: String
     let url: String
+    var isLive: Bool = false
 }
 
 /// VLC-backed player: plays .ts, .mkv, .avi, HLS, MP4 — everything IPTV throws at it.
@@ -24,7 +25,9 @@ final class VLCPlayerModel: NSObject, ObservableObject {
     func play(urlString: String) {
         guard let url = URL(string: urlString) else { failed = true; buffering = false; return }
         let media = VLCMedia(url: url)
-        media.addOption(":network-caching=1500")
+        media.addOption(":network-caching=3000")
+        media.addOption(":live-caching=3000")
+        media.addOption(":file-caching=3000")
         player.media = media
         player.play()
         startMonitoring()
@@ -124,10 +127,12 @@ struct PlayerView: View {
         .onExitCommand { dismiss() }
         .onPlayPauseCommand { model.togglePlayPause(); flashControls() }
         .onMoveCommand { dir in
-            switch dir {
-            case .left:  model.seek(-15)
-            case .right: model.seek(15)
-            default: break
+            if !item.isLive {
+                switch dir {
+                case .left:  model.seek(-15)
+                case .right: model.seek(15)
+                default: break
+                }
             }
             flashControls()
         }
@@ -138,7 +143,7 @@ struct PlayerView: View {
             HStack {
                 Text(item.title).font(.title3.bold()).foregroundStyle(.white).lineLimit(1)
                 Spacer()
-                if model.isLive {
+                if item.isLive {
                     Label("CANLI", systemImage: "dot.radiowaves.left.and.right")
                         .font(.headline).foregroundStyle(.red)
                 }
@@ -146,7 +151,7 @@ struct PlayerView: View {
             HStack(spacing: 18) {
                 Image(systemName: model.isPlaying ? "pause.fill" : "play.fill")
                     .font(.title2).foregroundStyle(.white)
-                if !model.isLive {
+                if !item.isLive {
                     Text(model.elapsed).font(.caption).foregroundStyle(.white).monospacedDigit()
                     ProgressView(value: model.progress).tint(.white)
                     Text(model.remaining).font(.caption).foregroundStyle(.white).monospacedDigit()

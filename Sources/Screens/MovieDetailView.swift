@@ -4,6 +4,7 @@ struct MovieDetailView: View {
     let movie: Movie
     @EnvironmentObject var theme: ThemeStore
     @EnvironmentObject var favorites: FavoritesStore
+    @EnvironmentObject var history: HistoryStore
     @State private var player: PlayerItem?
 
     var body: some View {
@@ -35,6 +36,7 @@ struct MovieDetailView: View {
                     Spacer().frame(height: 20)
                     HStack(spacing: 24) {
                         Button {
+                            history.recordMovie(movie.id)
                             player = PlayerItem(title: movie.name, url: movie.streamURL)
                         } label: {
                             Label("Şimdi İzle", systemImage: "play.fill").font(.headline).padding(.horizontal, 30)

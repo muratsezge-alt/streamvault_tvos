@@ -111,3 +111,40 @@ final class ThemeStore: ObservableObject {
         theme = AppTheme(rawValue: raw) ?? .navy
     }
 }
+
+/// Tracks recently watched channels and continue-watching movies/series.
+final class HistoryStore: ObservableObject {
+    @Published private(set) var channels: [String] = []
+    @Published private(set) var movies: [String] = []
+    @Published private(set) var series: [String] = []
+    private let kC = "hist_channels_v1", kM = "hist_movies_v1", kS = "hist_series_v1"
+
+    init() {
+        channels = (UserDefaults.standard.array(forKey: kC) as? [String]) ?? []
+        movies   = (UserDefaults.standard.array(forKey: kM) as? [String]) ?? []
+        series   = (UserDefaults.standard.array(forKey: kS) as? [String]) ?? []
+    }
+
+    private func bump(_ arr: inout [String], _ id: String, _ key: String, cap: Int = 40) {
+        arr.removeAll { $0 == id }
+        arr.insert(id, at: 0)
+        if arr.count > cap { arr = Array(arr.prefix(cap)) }
+        UserDefaults.standard.set(arr, forKey: key)
+    }
+    private func drop(_ arr: inout [String], _ id: String, _ key: String) {
+        arr.removeAll { $0 == id }
+        UserDefaults.standard.set(arr, forKey: key)
+    }
+
+    func recordChannel(_ id: String) { bump(&channels, id, kC) }
+    func recordMovie(_ id: String)   { bump(&movies, id, kM) }
+    func recordSeries(_ id: String)  { bump(&series, id, kS) }
+
+    func removeChannel(_ id: String) { drop(&channels, id, kC) }
+    func removeMovie(_ id: String)   { drop(&movies, id, kM) }
+    func removeSeries(_ id: String)  { drop(&series, id, kS) }
+
+    func clearChannels() { channels = []; UserDefaults.standard.set(channels, forKey: kC) }
+    func clearMovies()   { movies = [];   UserDefaults.standard.set(movies, forKey: kM) }
+    func clearSeries()   { series = [];   UserDefaults.standard.set(series, forKey: kS) }
+}

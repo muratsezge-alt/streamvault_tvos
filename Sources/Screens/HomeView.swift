@@ -136,6 +136,8 @@ struct CategorySidebar: View {
     let categories: [String]
     @Binding var selected: String?
     var searchKind: SearchView.Kind
+    var historyKind: HistoryView.Kind
+    var historyLabel: String
     var theme: AppTheme
 
     var body: some View {
@@ -156,6 +158,18 @@ struct CategorySidebar: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 8) {
                     SidebarRow(label: "Tümü", selected: selected == nil, theme: theme) { selected = nil }
+                    NavigationLink(destination: HistoryView(kind: historyKind)) {
+                        HStack(spacing: 10) {
+                            Image(systemName: historyKind == .channels ? "clock.arrow.circlepath" : "play.circle.fill")
+                            Text(historyLabel).lineLimit(1)
+                            Spacer()
+                        }
+                        .font(.headline)
+                        .foregroundStyle(theme.gold)
+                        .padding(.vertical, 14).padding(.horizontal, 18)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .buttonStyle(.card)
                     ForEach(categories, id: \.self) { c in
                         SidebarRow(label: c, selected: selected == c, theme: theme) { selected = c }
                     }
