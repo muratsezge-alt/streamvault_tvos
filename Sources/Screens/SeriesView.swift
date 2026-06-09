@@ -4,24 +4,21 @@ struct SeriesView: View {
     @EnvironmentObject var playlist: PlaylistStore
     @EnvironmentObject var theme: ThemeStore
     @State private var selectedGroup: String? = nil
-    @State private var query = ""
     private let columns = [GridItem(.adaptive(minimum: 300), spacing: 44)]
 
     private var groups: [String] {
         Array(Set(playlist.data.series.compactMap { $0.groupTitle })).sorted()
     }
     private var filtered: [Series] {
-        playlist.data.series.filter { s in
-            (selectedGroup == nil || s.groupTitle == selectedGroup) &&
-            (query.isEmpty || s.name.localizedCaseInsensitiveContains(query))
-        }
+        guard let g = selectedGroup else { return playlist.data.series }
+        return playlist.data.series.filter { $0.groupTitle == g }
     }
 
     var body: some View {
         let t = theme.theme
         HStack(spacing: 0) {
             CategorySidebar(title: "Diziler", categories: groups,
-                            selected: $selectedGroup, theme: t)
+                            selected: $selectedGroup, searchKind: .series, theme: t)
             ZStack {
                 t.background.ignoresSafeArea()
                 if playlist.data.series.isEmpty {
@@ -42,7 +39,6 @@ struct SeriesView: View {
                 }
             }
         }
-        .searchable(text: $query, placement: .automatic, prompt: "Dizi ara")
     }
 }
 

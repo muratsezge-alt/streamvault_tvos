@@ -5,7 +5,6 @@ struct LiveView: View {
     @EnvironmentObject var theme: ThemeStore
     @EnvironmentObject var favorites: FavoritesStore
     @State private var selectedGroup: String? = nil
-    @State private var query = ""
     @State private var player: PlayerItem?
     private let columns = [GridItem(.adaptive(minimum: 340), spacing: 44)]
 
@@ -13,17 +12,15 @@ struct LiveView: View {
         Array(Set(playlist.data.channels.compactMap { $0.groupTitle })).sorted()
     }
     private var filtered: [Channel] {
-        playlist.data.channels.filter { ch in
-            (selectedGroup == nil || ch.groupTitle == selectedGroup) &&
-            (query.isEmpty || ch.name.localizedCaseInsensitiveContains(query))
-        }
+        guard let g = selectedGroup else { return playlist.data.channels }
+        return playlist.data.channels.filter { $0.groupTitle == g }
     }
 
     var body: some View {
         let t = theme.theme
         HStack(spacing: 0) {
             CategorySidebar(title: "Canlı TV", categories: groups,
-                            selected: $selectedGroup, theme: t)
+                            selected: $selectedGroup, searchKind: .channels, theme: t)
             ZStack {
                 t.background.ignoresSafeArea()
                 if playlist.data.channels.isEmpty {
@@ -53,7 +50,6 @@ struct LiveView: View {
                 }
             }
         }
-        .searchable(text: $query, placement: .automatic, prompt: "Kanal ara")
         .fullScreenCover(item: $player) { PlayerView(item: $0) }
     }
 }

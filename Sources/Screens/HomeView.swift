@@ -135,11 +135,24 @@ struct CategorySidebar: View {
     let title: String
     let categories: [String]
     @Binding var selected: String?
+    var searchKind: SearchView.Kind
     var theme: AppTheme
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             Text(title).font(.largeTitle.bold()).foregroundStyle(theme.gold)
+            NavigationLink(destination: SearchView(kind: searchKind)) {
+                HStack(spacing: 10) {
+                    Image(systemName: "magnifyingglass")
+                    Text("Ara")
+                    Spacer()
+                }
+                .font(.headline)
+                .foregroundStyle(theme.textPrimary)
+                .padding(.vertical, 14).padding(.horizontal, 18)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .buttonStyle(.card)
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 8) {
                     SidebarRow(label: "Tümü", selected: selected == nil, theme: theme) { selected = nil }
